@@ -1,0 +1,36 @@
+server:
+  port: 8090
+app:
+  frontend-url: http://localhost:5173
+
+spring:
+  application:
+    name: engagement.tool
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: aditya.prasad132000@gmail.com
+    password: 
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+      format_sql: true
+      generate_statistics: false
+      show-sql: true
+  datasource:
+    url: jdbc:mysql://localhost:3306/engagement_db
+    username: root
+    password: 
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    initialization-mode: always
+  sql:
+    init:
+      mode: always
