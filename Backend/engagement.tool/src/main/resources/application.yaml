@@ -1,7 +1,8 @@
 server:
   port: 8090
+  address: 0.0.0.0
 app:
-  frontend-url: http://localhost:5173
+  frontend-url: http://192.168.0.114:5173
 
 spring:
   application:
