@@ -29,4 +29,8 @@ public class Question {
     @Enumerated(EnumType.STRING)
     @Column(name = "question_type", nullable = false)
     private QuestionType questionType;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean active = true;
 }

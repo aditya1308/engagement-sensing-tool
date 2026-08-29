@@ -36,7 +36,6 @@ public class SurveyAssignmentService {
         List<User> users = userRepository.findAll();
 
         for (User user : users) {
-            log.info("USER : {}",user.getEmail());
             if (isSurveyDue(user, today)) {
                 createSurvey(user);
             }
@@ -48,7 +47,6 @@ public class SurveyAssignmentService {
         var latestSurvey = surveyRepository.findTopByUserIdOrderByAssignedAtDesc(user.getId());
         if (latestSurvey.isEmpty()) {
             LocalDate firstSurveyDate = user.getDateOfJoining().plusMonths(6);
-            log.info("First survey date for user {}: {}", user.getEmail(), firstSurveyDate);
             return !firstSurveyDate.isAfter(today);
         }
 
@@ -56,7 +54,6 @@ public class SurveyAssignmentService {
                         .getAssignedAt()
                         .toLocalDate()
                         .plusMonths(6);
-        log.info("Next survey date for user {}: {}", user.getEmail(), nextSurveyDate);
         return !nextSurveyDate.isAfter(today);
     }
 
@@ -76,9 +73,7 @@ public class SurveyAssignmentService {
 
     private void createAnswers(Survey survey) {
 
-        log.info("In createAnswers function");
-        List<Question> questions = questionRepository.findAll();
-
+        List<Question> questions = questionRepository.findAllByActiveTrue();
         if (questions.isEmpty()) {
             log.info("No questions available for survey {}", survey.getId());
             return;

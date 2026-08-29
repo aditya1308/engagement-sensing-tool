@@ -127,6 +127,10 @@
     gap: 20px;
 }
 
+.question-management-panel {
+    border-top: 4px solid #f00808;
+}
+
 .theme-row-heading {
     display: flex;
     justify-content: space-between;
@@ -393,5 +397,253 @@
 
     .dashboard-panel {
         padding: 20px;
+    }
+}
+
+.question-management-heading {
+    margin-bottom: 20px;
+}
+
+.question-management-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.question-action-card {
+    padding: 22px;
+    border: 1px solid #e2e2e2;
+    border-radius: 4px;
+    background: #fafafa;
+}
+
+.question-action-label {
+    display: block;
+    color: #e30613;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+}
+
+.question-action-card h3 {
+    margin: 8px 0 10px;
+    font-size: 18px;
+}
+
+.question-action-card p {
+    margin: 0 0 18px;
+    color: #666;
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+.question-file-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.question-file-input {
+    flex: 1;
+    min-width: 230px;
+    padding: 9px;
+    border: 1px solid #d7d7d7;
+    border-radius: 3px;
+    background: #fff;
+}
+
+.question-primary-button,
+.question-secondary-button {
+    border: 0;
+    border-radius: 3px;
+    padding: 11px 17px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.question-primary-button {
+    background: #e30613;
+    color: #fff;
+}
+
+.question-secondary-button {
+    background: #000;
+    color: #fff;
+}
+
+.question-primary-button:disabled,
+.question-secondary-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.selected-question-file {
+    margin-top: 10px;
+    color: #555;
+    font-size: 12px;
+}
+
+.question-feedback {
+    margin-top: 18px;
+    padding: 12px 14px;
+    border-radius: 3px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.question-feedback.success {
+    background: #e6f5ea;
+    color: #20753b;
+    border: 1px solid #c9e8d1;
+}
+
+.question-feedback.failure {
+    background: #fdebed;
+    color: #9a1118;
+    border: 1px solid #f2c9ce;
+}
+
+@media (max-width: 760px) {
+    .question-management-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .question-file-row {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .question-file-input {
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+}
+
+
+/* Collapsible HR dashboard sections */
+.collapsible-panel {
+    padding: 0;
+     border-top: 4px solid #f00808;
+    overflow: hidden;
+}
+
+.collapsible-heading {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    padding: 24px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.collapsible-heading {
+    transition: background-color 0.2s ease;
+}
+
+.collapsible-heading:hover {
+    background: #fafafa;
+}
+
+.collapsible-heading:focus-visible {
+    outline: 2px solid #e30613;
+    outline-offset: -2px;
+}
+
+.collapsible-heading h2 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.collapsible-heading p {
+    margin: 8px 0 0;
+    color: #666;
+}
+
+.collapse-arrow {
+    flex: 0 0 auto;
+    font-size: 24px;
+    line-height: 1;
+    transform: rotate(0deg);
+    transition: transform 0.32s ease;
+}
+
+.collapse-arrow.open {
+    transform: rotate(180deg);
+}
+
+/*
+ * Grid rows let content animate smoothly between zero height and its
+ * natural height, so both expanding and collapsing feel like a slide.
+ */
+.collapsible-body {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transform: translateY(-8px);
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+        grid-template-rows 0.36s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 0.24s ease,
+        transform 0.36s cubic-bezier(0.4, 0, 0.2, 1),
+        visibility 0s linear 0.36s;
+}
+
+.collapsible-body.open {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+    pointer-events: auto;
+    transition:
+        grid-template-rows 0.36s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 0.3s ease 0.04s,
+        transform 0.36s cubic-bezier(0.4, 0, 0.2, 1),
+        visibility 0s linear 0s;
+}
+
+.collapsible-body-inner {
+    min-height: 0;
+    overflow: hidden;
+}
+
+.collapsible-content {
+    padding: 0 28px 28px;
+}
+
+.employee-tools {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 620px) {
+    .collapsible-heading {
+        padding: 20px;
+    }
+
+    .collapsible-content {
+        padding: 0 20px 20px;
+    }
+
+    .employee-tools {
+        justify-content: stretch;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .collapsible-body,
+    .collapsible-body.open,
+    .collapse-arrow,
+    .collapsible-heading {
+        transition: none;
     }
 }
