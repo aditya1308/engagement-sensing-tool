@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
     useParams,
     useSearchParams
@@ -52,6 +52,17 @@ function SurveyPage() {
     const [started, setStarted] =
         useState(false);
 
+    const [displayedQuestion, setDisplayedQuestion] =
+        useState("");
+
+    const [isBotTyping, setIsBotTyping] =
+        useState(false);
+
+    const [showTypingIndicator, setShowTypingIndicator] =
+        useState(false);
+
+    const chatEndRef = useRef<HTMLDivElement | null>(null);
+
 
     /*
      * Load survey
@@ -90,6 +101,19 @@ function SurveyPage() {
                 data.status === "IN_PROGRESS"
             ) {
                 setStarted(true);
+
+                const firstUnansweredQuestion =
+                    data.questions.findIndex(
+                        (question) =>
+                            !question.answer &&
+                            question.score == null
+                    );
+
+                if (firstUnansweredQuestion >= 0) {
+                    setCurrentQuestionIndex(
+                        firstUnansweredQuestion
+                    );
+                }
             }
 
         } catch (error) {
@@ -143,6 +167,20 @@ function SurveyPage() {
     };
 
 
+    useEffect(() => {
+
+        if (!started) {
+            return;
+        }
+
+        chatEndRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "end"
+        });
+
+    }, [currentQuestionIndex, started, survey]);
+
+
     /*
      * Current question
      */
@@ -151,6 +189,63 @@ function SurveyPage() {
         survey?.questions[
             currentQuestionIndex
         ];
+
+
+    /*
+     * Animate each new bot question like it is being typed.
+     */
+    useEffect(() => {
+
+        if (!started || !currentQuestion) {
+            return;
+        }
+
+        let typingTimer: ReturnType<typeof setInterval> | undefined;
+        let indicatorTimer: ReturnType<typeof setTimeout> | undefined;
+
+        setDisplayedQuestion("");
+        setIsBotTyping(true);
+        setShowTypingIndicator(true);
+
+        indicatorTimer = setTimeout(() => {
+
+            setShowTypingIndicator(false);
+
+            let characterIndex = 0;
+
+            typingTimer = setInterval(() => {
+
+                characterIndex += 1;
+
+                setDisplayedQuestion(
+                    currentQuestion.question.slice(0, characterIndex)
+                );
+
+                if (characterIndex >= currentQuestion.question.length) {
+
+                    if (typingTimer) {
+                        clearInterval(typingTimer);
+                    }
+
+                    setIsBotTyping(false);
+                }
+
+            }, 28);
+
+        }, 650);
+
+        return () => {
+
+            if (indicatorTimer) {
+                clearTimeout(indicatorTimer);
+            }
+
+            if (typingTimer) {
+                clearInterval(typingTimer);
+            }
+        };
+
+    }, [currentQuestionIndex, currentQuestion?.question, started]);
 
 
     /*
@@ -177,22 +272,47 @@ function SurveyPage() {
 
             setSubmitting(true);
 
-            await submitAnswer(
-                surveyId!,
-                employeeId!,
-                {
-                    answerId:
-                        currentQuestion.answerId,
+            const savedAnswer =
+                await submitAnswer(
+                    surveyId!,
+                    employeeId!,
+                    {
+                        answerId:
+                            currentQuestion.answerId,
 
-                    answer:
-                        answer,
+                        answer:
+                            answer,
 
-                    score:
-                        currentQuestion.questionType === "RATING"
-                            ? Number(answer)
-                            : null
+                        score:
+                            currentQuestion.questionType === "RATING"
+                                ? Number(answer)
+                                : null
+                    }
+                );
+
+            setSurvey((previousSurvey) => {
+
+                if (!previousSurvey) {
+                    return previousSurvey;
                 }
-            );
+
+                return {
+                    ...previousSurvey,
+                    questions: previousSurvey.questions.map(
+                        (question, index) =>
+                            index === currentQuestionIndex
+                                ? {
+                                    ...question,
+                                    answer: savedAnswer.answer ?? answer,
+                                    score: savedAnswer.score ??
+                                        (currentQuestion.questionType === "RATING"
+                                            ? Number(answer)
+                                            : null)
+                                }
+                                : question
+                    )
+                };
+            });
 
 
             /*
@@ -600,156 +720,210 @@ function SurveyPage() {
 
                     {currentQuestion && (
 
-                        <div className="question-section">
+                        <div className="chat-conversation">
 
-                            <div className="theme">
-                                {currentQuestion.theme}
+                            <div className="chat-messages">
+
+                                {survey.questions
+                                    .slice(0, currentQuestionIndex + 1)
+                                    .map((question, index) => {
+
+                                        const isCurrentQuestion =
+                                            index === currentQuestionIndex;
+
+                                        const submittedAnswer =
+                                            question.questionType === "RATING" &&
+                                            question.score != null
+                                                ? String(question.score)
+                                                : question.answer;
+
+                                        return (
+                                            <div
+                                                className="chat-exchange"
+                                                key={question.answerId}
+                                            >
+
+                                                <div className="message-row bot-message-row">
+                                                    <div className="message-bubble bot-message">
+                                                        <div className="theme chat-theme">
+                                                            {question.theme}
+                                                        </div>
+
+                                                        {isCurrentQuestion && showTypingIndicator ? (
+                                                            <div
+                                                                className="typing-indicator"
+                                                                aria-label="Bot is typing"
+                                                            >
+                                                                <span></span>
+                                                                <span></span>
+                                                                <span></span>
+                                                            </div>
+                                                        ) : (
+                                                            <p>
+                                                                {isCurrentQuestion
+                                                                    ? displayedQuestion
+                                                                    : question.question}
+
+                                                                {isCurrentQuestion && isBotTyping && (
+                                                                    <span className="typing-cursor">|</span>
+                                                                )}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {!isCurrentQuestion && submittedAnswer && (
+                                                    <div className="message-row user-message-row">
+                                                        <div className="message-bubble user-message">
+                                                            {submittedAnswer}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                            </div>
+                                        );
+                                    })}
+
+                                <div ref={chatEndRef} />
+
                             </div>
 
-                            <h2>
-                                {currentQuestion.question}
-                            </h2>
 
+                            {!isBotTyping && (
 
-                            {/* RATING */}
+                            <div className="answer-composer answer-composer-visible">
 
-                            {currentQuestion.questionType ===
-                                "RATING" && (
+                                {/* RATING */}
+                                {currentQuestion.questionType ===
+                                    "RATING" && (
 
-                                <div className="rating-container">
+                                    <div className="rating-container">
 
-                                    <div className="rating-buttons">
+                                        <div className="rating-buttons">
 
-                                        {[1, 2, 3, 4, 5].map(
-                                            (value) => (
+                                            {[1, 2, 3, 4, 5].map(
+                                                (value) => (
 
-                                                <button
-                                                    key={value}
-                                                    className={
-                                                        answer ===
-                                                        String(value)
-                                                            ? "rating selected"
-                                                            : "rating"
-                                                    }
-                                                    onClick={() =>
-                                                        setAnswer(
+                                                    <button
+                                                        key={value}
+                                                        className={
+                                                            answer ===
                                                             String(value)
-                                                        )
-                                                    }
-                                                >
-                                                    {value}
-                                                </button>
+                                                                ? "rating selected"
+                                                                : "rating"
+                                                        }
+                                                        onClick={() =>
+                                                            setAnswer(
+                                                                String(value)
+                                                            )
+                                                        }
+                                                    >
+                                                        {value}
+                                                    </button>
 
-                                            )
-                                        )}
+                                                )
+                                            )}
+
+                                        </div>
+
+                                        <div className="rating-labels">
+                                            <span>Very dissatisfied</span>
+                                            <span>Very satisfied</span>
+                                        </div>
 
                                     </div>
-
-                                    <div className="rating-labels">
-
-                                        <span>
-                                            Very dissatisfied
-                                        </span>
-
-                                        <span>
-                                            Very satisfied
-                                        </span>
-
-                                    </div>
-
-                                </div>
-                            )}
-
-
-                            {/* YES NO */}
-
-                            {currentQuestion.questionType ===
-                                "YES_NO" && (
-
-                                <div className="yes-no-container">
-
-                                    <button
-                                        className={
-                                            answer === "YES"
-                                                ? "choice selected"
-                                                : "choice"
-                                        }
-                                        onClick={() =>
-                                            setAnswer("YES")
-                                        }
-                                    >
-                                        Yes
-                                    </button>
-
-                                    <button
-                                        className={
-                                            answer === "NO"
-                                                ? "choice selected"
-                                                : "choice"
-                                        }
-                                        onClick={() =>
-                                            setAnswer("NO")
-                                        }
-                                    >
-                                        No
-                                    </button>
-
-                                </div>
-                            )}
-
-
-                            {/* TEXT */}
-
-                            {currentQuestion.questionType ===
-                                "TEXT" && (
-
-                                <textarea
-                                    className="text-answer"
-                                    value={answer}
-                                    onChange={(event) =>
-                                        setAnswer(
-                                            event.target.value
-                                        )
-                                    }
-                                    placeholder="Type your answer here..."
-                                    rows={6}
-                                />
-
-                            )}
-
-
-                            {error && (
-
-                                <p className="form-error">
-                                    {error}
-                                </p>
-
-                            )}
-
-
-                            <button
-                                className="next-button"
-                                onClick={
-                                    handleSubmitAnswer
-                                }
-                                disabled={submitting}
-                            >
-
-                                {submitting
-                                    ? "Saving..."
-                                    : currentQuestionIndex ===
-                                      survey.questions.length - 1
-                                        ? "Complete Survey"
-                                        : "Continue"
-                                }
-
-                                {!submitting && (
-                                    <span>
-                                        →
-                                    </span>
                                 )}
 
-                            </button>
+
+                                {/* YES NO */}
+                                {currentQuestion.questionType ===
+                                    "YES_NO" && (
+
+                                    <div className="yes-no-container">
+
+                                        <button
+                                            className={
+                                                answer === "YES"
+                                                    ? "choice selected"
+                                                    : "choice"
+                                            }
+                                            onClick={() =>
+                                                setAnswer("YES")
+                                            }
+                                        >
+                                            Yes
+                                        </button>
+
+                                        <button
+                                            className={
+                                                answer === "NO"
+                                                    ? "choice selected"
+                                                    : "choice"
+                                            }
+                                            onClick={() =>
+                                                setAnswer("NO")
+                                            }
+                                        >
+                                            No
+                                        </button>
+
+                                    </div>
+                                )}
+
+
+                                {/* TEXT */}
+                                {currentQuestion.questionType ===
+                                    "TEXT" && (
+
+                                    <textarea
+                                        className="text-answer"
+                                        value={answer}
+                                        onChange={(event) =>
+                                            setAnswer(
+                                                event.target.value
+                                            )
+                                        }
+                                        placeholder="Type your answer here..."
+                                        rows={4}
+                                    />
+
+                                )}
+
+
+                                {error && (
+                                    <p className="form-error">
+                                        {error}
+                                    </p>
+                                )}
+
+
+                                <button
+                                    className="next-button"
+                                    onClick={
+                                        handleSubmitAnswer
+                                    }
+                                    disabled={submitting}
+                                >
+
+                                    {submitting
+                                        ? "Saving..."
+                                        : currentQuestionIndex ===
+                                          survey.questions.length - 1
+                                            ? "Complete Survey"
+                                            : "Send"
+                                    }
+
+                                    {!submitting && (
+                                        <span>
+                                            →
+                                        </span>
+                                    )}
+
+                                </button>
+
+                            </div>
+
+                            )}
 
                         </div>
 
