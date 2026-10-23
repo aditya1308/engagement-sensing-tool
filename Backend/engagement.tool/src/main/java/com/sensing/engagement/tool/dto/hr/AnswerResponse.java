@@ -18,4 +18,5 @@ public class AnswerResponse {
     private QuestionType questionType;
     private String answer;
     private Double score;
+    private String followUpExplanation;
 }

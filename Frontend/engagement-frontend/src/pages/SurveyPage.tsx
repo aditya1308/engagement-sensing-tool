@@ -40,6 +40,9 @@ function SurveyPage() {
     const [answer, setAnswer] =
         useState("");
 
+    const [followUpExplanation, setFollowUpExplanation] =
+        useState("");
+
     const [loading, setLoading] =
         useState(true);
 
@@ -105,8 +108,11 @@ function SurveyPage() {
                 const firstUnansweredQuestion =
                     data.questions.findIndex(
                         (question) =>
-                            !question.answer &&
-                            question.score == null
+                            (!question.answer && question.score == null) ||
+                            (question.questionType === "RATING" &&
+                                question.score != null &&
+                                question.score < 3 &&
+                                !question.followUpExplanation?.trim())
                     );
 
                 if (firstUnansweredQuestion >= 0) {
@@ -191,6 +197,19 @@ function SurveyPage() {
         ];
 
 
+    useEffect(() => {
+        if (!currentQuestion) return;
+
+        setAnswer(
+            currentQuestion.questionType === "RATING" && currentQuestion.score != null
+                ? String(currentQuestion.score)
+                : currentQuestion.answer ?? ""
+        );
+        setFollowUpExplanation(currentQuestion.followUpExplanation ?? "");
+        setError("");
+    }, [currentQuestionIndex, currentQuestion?.answerId]);
+
+
     /*
      * Animate each new bot question like it is being typed.
      */
@@ -258,11 +277,13 @@ function SurveyPage() {
         }
 
         if (!answer.trim()) {
+            setError("Please provide an answer.");
+            return;
+        }
 
-            setError(
-                "Please provide an answer."
-            );
-
+        const isLowRating = currentQuestion.questionType === "RATING" && Number(answer) < 3;
+        if (isLowRating && !followUpExplanation.trim()) {
+            setError("Please tell us why you selected a rating below 3.");
             return;
         }
 
@@ -272,55 +293,31 @@ function SurveyPage() {
 
             setSubmitting(true);
 
-            const savedAnswer =
+            const updatedSurvey =
                 await submitAnswer(
                     surveyId!,
                     employeeId!,
                     {
-                        answerId:
-                            currentQuestion.answerId,
-
-                        answer:
-                            answer,
-
+                        answerId: currentQuestion.answerId,
+                        answer: answer,
                         score:
                             currentQuestion.questionType === "RATING"
                                 ? Number(answer)
-                                : null
+                                : null,
+                        followUpExplanation: isLowRating
+                            ? followUpExplanation.trim()
+                            : null
                     }
                 );
 
-            setSurvey((previousSurvey) => {
-
-                if (!previousSurvey) {
-                    return previousSurvey;
-                }
-
-                return {
-                    ...previousSurvey,
-                    questions: previousSurvey.questions.map(
-                        (question, index) =>
-                            index === currentQuestionIndex
-                                ? {
-                                    ...question,
-                                    answer: savedAnswer.answer ?? answer,
-                                    score: savedAnswer.score ??
-                                        (currentQuestion.questionType === "RATING"
-                                            ? Number(answer)
-                                            : null)
-                                }
-                                : question
-                    )
-                };
-            });
-
+            setSurvey(updatedSurvey);
 
             /*
              * Next question
              */
             if (
                 currentQuestionIndex <
-                survey!.questions.length - 1
+                updatedSurvey.questions.length - 1
             ) {
 
                 setCurrentQuestionIndex(
@@ -328,6 +325,7 @@ function SurveyPage() {
                 );
 
                 setAnswer("");
+                setFollowUpExplanation("");
 
             } else {
 
@@ -776,6 +774,11 @@ function SurveyPage() {
                                                     <div className="message-row user-message-row">
                                                         <div className="message-bubble user-message">
                                                             {submittedAnswer}
+                                                            {question.followUpExplanation && (
+                                                                <p>
+                                                                    Why: {question.followUpExplanation}
+                                                                </p>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 )}
@@ -834,6 +837,22 @@ function SurveyPage() {
                                     </div>
                                 )}
 
+
+                                {currentQuestion.questionType === "RATING" &&
+                                    answer !== "" && Number(answer) < 3 && (
+                                        <div>
+                                            <p>Could you tell us why you selected this score?</p>
+                                            <textarea
+                                                className="text-answer"
+                                                value={followUpExplanation}
+                                                onChange={(event) => setFollowUpExplanation(event.target.value)}
+                                                placeholder="Please share your reason..."
+                                                rows={3}
+                                                maxLength={5000}
+                                                aria-label="Reason for low rating"
+                                            />
+                                        </div>
+                                    )}
 
                                 {/* YES NO */}
                                 {currentQuestion.questionType ===

@@ -42,6 +42,7 @@ export interface AnswerResponse {
     questionType: QuestionType;
     answer: string | null;
     score: number | null;
+    followUpExplanation: string | null;
 }
 
 export interface EmployeeSurveyItem {

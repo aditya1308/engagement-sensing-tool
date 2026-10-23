@@ -170,6 +170,9 @@ public class HrDashboardService {
                             .score(
                                     answer.getScore()
                             )
+                            .followUpExplanation(
+                                    answer.getFollowUpExplanation()
+                            )
                             .build();
 
 

@@ -1,7 +1,6 @@
 import type {
     SurveyResponse,
-    SubmitAnswerRequest,
-    QuestionAnswer
+    SubmitAnswerRequest
 } from "../types/survey";
 
 const API_BASE_URL =
@@ -85,7 +84,7 @@ export const submitAnswer = async (
     surveyId: string,
     employeeId: string,
     request: SubmitAnswerRequest
-): Promise<QuestionAnswer> => {
+): Promise<SurveyResponse> => {
 
     const url =
         `${API_BASE_URL}/api/surveys/${surveyId}/answers?employeeId=${encodeURIComponent(employeeId)}`;

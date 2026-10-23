@@ -30,4 +30,7 @@ public class Answer {
     private String answer;
 
     private Double score;
+
+    @Column(name = "follow_up_explanation", columnDefinition = "TEXT")
+    private String followUpExplanation;
 }

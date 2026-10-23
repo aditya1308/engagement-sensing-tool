@@ -16,6 +16,7 @@ export interface QuestionAnswer {
     questionType: QuestionType;
     answer: string | null;
     score: number | null;
+    followUpExplanation: string | null;
 }
 
 export interface SurveyResponse {
@@ -31,4 +32,5 @@ export interface SubmitAnswerRequest {
     answerId: string;
     answer: string;
     score: number | null;
+    followUpExplanation?: string | null;
 }

@@ -151,6 +151,21 @@ public class SurveyService {
         answer.setAnswer(request.getAnswer());
         answer.setScore(request.getScore());
 
+        String explanation = request.getFollowUpExplanation();
+        boolean lowRating = answer.getQuestion().getQuestionType() == com.sensing.engagement.tool.enums.QuestionType.RATING
+                && request.getScore() != null
+                && request.getScore() < 3;
+
+        if (lowRating && (explanation == null || explanation.isBlank())) {
+            throw new IllegalArgumentException("Please explain why you selected a rating below 3");
+        }
+
+        if (explanation != null && explanation.length() > 5000) {
+            throw new IllegalArgumentException("Follow-up explanation must be 5000 characters or fewer");
+        }
+
+        answer.setFollowUpExplanation(lowRating ? explanation.trim() : null);
+
         answerRepository.save(answer);
 
         return buildSurveyResponse(survey);
@@ -273,6 +288,7 @@ public class SurveyService {
                 .questionType(answer.getQuestion().getQuestionType())
                 .answer(answer.getAnswer())
                 .score(answer.getScore())
+                .followUpExplanation(answer.getFollowUpExplanation())
                 .build();
     }
 }

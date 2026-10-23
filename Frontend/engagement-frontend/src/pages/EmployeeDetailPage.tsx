@@ -151,6 +151,12 @@ function EmployeeDetailPage() {
                                                     Score: <strong>{answer.score}</strong>
                                                 </div>
                                             )}
+                                            {answer.followUpExplanation && (
+                                                <div className="answer-box">
+                                                    <strong>Reason for low rating:</strong>{" "}
+                                                    {answer.followUpExplanation}
+                                                </div>
+                                            )}
                                         </div>
                                     </article>
                                 ))}
