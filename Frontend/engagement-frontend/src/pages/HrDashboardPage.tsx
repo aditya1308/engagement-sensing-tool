@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 
 import {
     getEmployees,
-    getHrDashboard
+    getHrDashboard,
+    sendDashboardReportEmail
 } from "../services/hrService";
 import {
     exportQuestionsExcel,
@@ -30,6 +31,9 @@ function HrDashboardPage() {
     const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [sendingReport, setSendingReport] = useState(false);
+    const [reportMessage, setReportMessage] = useState("");
+    const [reportError, setReportError] = useState("");
 
     const [questionFile, setQuestionFile] =
         useState<File | null>(null);
@@ -70,6 +74,26 @@ function HrDashboardPage() {
             setError("Unable to load HR dashboard.");
         } finally {
             setLoading(false);
+        }
+    };
+
+
+    const handleSendDashboardReport = async () => {
+        try {
+            setSendingReport(true);
+            setReportMessage("");
+            setReportError("");
+            const result = await sendDashboardReportEmail();
+            setReportMessage(result.message || "Dashboard report sent successfully.");
+        } catch (error) {
+            console.error(error);
+            setReportError(
+                error instanceof Error
+                    ? error.message
+                    : "Unable to send the dashboard report."
+            );
+        } finally {
+            setSendingReport(false);
         }
     };
 
@@ -184,9 +208,19 @@ function HrDashboardPage() {
                     <div className="hr-brand">Engagement Sensing</div>
                     <div className="hr-subtitle">HR Business Partner Dashboard</div>
                 </div>
-                <button className="refresh-button" onClick={loadDashboard}>
-                    Refresh
-                </button>
+                <div className="hr-header-actions">
+                    <button
+                        className="refresh-button"
+                        type="button"
+                        disabled={sendingReport}
+                        onClick={handleSendDashboardReport}
+                    >
+                        {sendingReport ? "Sending Report..." : "Send Report"}
+                    </button>
+                    <button className="refresh-button" onClick={loadDashboard}>
+                        Refresh
+                    </button>
+                </div>
             </header>
 
             <main className="hr-content">
@@ -196,6 +230,12 @@ function HrDashboardPage() {
                         <p>Monitor participation and employee sentiment.</p>
                     </div>
                 </section>
+
+                {(reportMessage || reportError) && (
+                    <div className={`report-feedback ${reportError ? "failure" : "success"}`} role="status">
+                        {reportError || reportMessage}
+                    </div>
+                )}
 
                 <section className="metric-grid">
                     <MetricCard

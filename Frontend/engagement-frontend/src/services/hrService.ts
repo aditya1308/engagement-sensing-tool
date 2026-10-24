@@ -39,3 +39,10 @@ export const getEmployeeResponses = async (
 
     return handleResponse<EmployeeSurveyResponse>(response);
 };
+
+export const sendDashboardReportEmail = async (): Promise<{ message: string }> => {
+    const response = await fetch(`${API_BASE_URL}/api/hr/dashboard/report/email`, {
+        method: "POST"
+    });
+    return handleResponse<{ message: string }>(response);
+};

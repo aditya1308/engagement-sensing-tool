@@ -647,3 +647,36 @@
         transition: none;
     }
 }
+
+
+.hr-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.refresh-button:disabled {
+    opacity: 0.65;
+    cursor: wait;
+}
+
+.report-feedback {
+    margin: 0 0 20px;
+    padding: 12px 15px;
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.report-feedback.success {
+    background: #e6f5ea;
+    color: #20753b;
+    border: 1px solid #b7e2c1;
+}
+
+.report-feedback.failure {
+    background: #fff0f0;
+    color: #a61b1b;
+    border: 1px solid #f2b8b8;
+}
